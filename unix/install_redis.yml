@@ -1,0 +1,147 @@
+---
+- hosts: "{{host_app}}"
+  remote_user: root
+  vars:
+    software_files_path: "/etc/ansible/roles/redis/files"
+    software_install_path: "/usr/local"
+    software_log_path: "/var/run"
+    redis_version: "3.2.11"
+    redis_file: "redis-{{ redis_version }}.tar.gz"
+    redis_file_path: "{{ software_files_path }}/{{ redis_file }}"
+    redis_file_url: "http://download.redis.io/releases/redis-{{ redis_version }}.tar.gz"
+    redis_daemon: "redis"
+    redis_dir_path: "/etc/redis"
+    redis_timeout: 0
+    redis_keepalive: 300
+    redis_user: redis
+    redis_loglevel: "notice"
+    redis_logfile: "{{software_log_path}}/redis.log"
+    redis_pidfile: "{{software_log_path}}/redis_{{ redis_port | default('6379') }}.pid"
+    redis_databases: 16
+    redis_rdbcompression: "yes"
+    redis_dbfilename: dump.rdb
+    redis_dbdir: "/etc/redis"
+    redis_requirepass: "14YVeC0PToxRIAs"
+    redis_masterauth: "14YVeC0PToxRIAs"
+    redis_maxmemory: "1000mb"
+    redis_master_host: "192.168.9.47"
+    redis_master_port: "6379"
+  tasks:
+    - name: install | Check if redis local file is already configured.
+      stat: path={{ redis_file_path }}
+      connection: local
+      register: redis_file_result
+
+    - name: install | Create software directory.
+      file: path={{ software_files_path }} state=directory
+      connection: local
+      when: not redis_file_result.stat.exists
+
+    - name: install | Download redis file.
+      get_url: url={{ redis_file_url }} dest={{ software_files_path }}
+      connection: local
+      when: not redis_file_result.stat.exists
+
+    - name: install | Confirm the existence of the installation directory.
+      file: path={{ software_install_path }} state=directory
+
+    - name: install | Ensure gcc packages are installed.
+      yum:
+        name: "{{ item }}"
+        state: installed
+      with_items:
+        - gcc
+        - gcc-c++
+        - libtool
+        - make
+
+    - name: install | Copy redis file to agent.
+      unarchive:
+        src: "{{ redis_file_path }}"
+        dest: "/tmp/"
+        creates: "/tmp/redis-{{ redis_version }}"
+
+    - name: install | Build redis.
+      shell: "make && make PREFIX={{ software_install_path }}/redis-{{ redis_version }} install chdir=/tmp/redis-{{ redis_version }} creates={{ software_install_path }}/redis-{{ redis_version }}"
+
+    - name: install | Check if redis remote soft link is already configured.
+      stat: path="{{ software_install_path }}/redis"
+      register: redis_soft_link_result
+
+    - name: install | Create redis dir soft link.
+      file: "src={{ software_install_path }}/redis-{{ redis_version }} dest={{ software_install_path }}/redis state=link"
+      when: not redis_soft_link_result.stat.exists
+
+    - name: install | Copy redis-trib.rb to bin path.
+      copy: "src=/tmp/redis-{{ redis_version }}/src/redis-trib.rb dest={{ software_install_path }}/redis-{{ redis_version }}/bin mode=755 remote_src=true"
+      when: not redis_soft_link_result.stat.exists
+
+    - name: install | Config environment variable.
+      lineinfile: dest=/etc/profile line='export PATH={{ software_install_path }}/redis/bin/:$PATH'
+
+
+    - name: configure | Set vm.overcommit_memory to 1 in /etc/sysctl.conf.
+      sysctl:
+       name: vm.overcommit_memory
+       value: 1
+       state: present
+       ignoreerrors: yes
+
+    - name: configure | TCP backlog setting of 512.
+      shell: echo 512 > /proc/sys/net/core/somaxconn
+
+    - name: configure | Shutdown transparent_hugepage.
+      shell: "echo never > {{ item }}"
+      with_items:
+        - '/sys/kernel/mm/transparent_hugepage/enabled'
+        - '/sys/kernel/mm/transparent_hugepage/defrag'
+
+    - name: configure | Create redis group.
+      group: name={{ redis_user }}
+
+    - name: configure | Create redis user.
+      user: name={{ redis_user }} group={{ redis_user }} shell=/sbin/nologin
+
+    - name: configure | Create redis db Directory.
+      file: path={{ item }} state=directory owner={{ redis_user }} group={{ redis_user }}
+      with_items:
+        - "{{ redis_dir_path }}"
+        - "{{ software_log_path }}"
+
+    - name: configure | Set transparent_hugepage is never to /etc/rc.local.
+      lineinfile: dest=/etc/rc.local line='echo never > {{ item }}'
+      with_items:
+        - '/sys/kernel/mm/transparent_hugepage/enabled'
+        - '/sys/kernel/mm/transparent_hugepage/defrag'
+
+    - name: configure | Ensure Redis is configured master.
+      template:
+        src: ../templates/redis.conf.j2
+        dest: "{{ redis_dir_path }}/redis.conf"
+        mode: 0644
+        owner: "{{ redis_user }}"
+        group: "{{ redis_user }}"
+      tags:
+        redis_master
+    - name: configure | Ensure Redis is configured slave.
+      template:
+        src: ../templates/redis_slave.conf.j2
+        dest: "{{ redis_dir_path }}/redis.conf"
+        mode: 0644
+        owner: "{{ redis_user }}"
+        group: "{{ redis_user }}"
+      tags:
+        redis_slave
+    - name: configure | Ensure Redis daemon shell is configured.
+      template:
+        src: ../templates/redis.sh.j2
+        dest: "/etc/rc.d/init.d/{{ redis_daemon }}"
+        mode: 0755
+
+    - name: configure | Add redis services.
+      shell: "chkconfig --add {{ redis_daemon }}  && chkconfig {{ redis_daemon }} on"
+
+    - name: configure | Ensure Redis is running and enabled on boot.
+      service: "name={{ redis_daemon }} state=restarted enabled=yes"
+#ansible-playbook main.yml -i /etc/ansible/webservers.yml --extra-vars "host_app=redis-master" --skip-tags="redis_slave"
+#ansible-playbook main.yml -i /etc/ansible/webservers.yml --extra-vars "host_app=redis-slave redis_slave=true" --skip-tags="redis_master"

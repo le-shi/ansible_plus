@@ -1,0 +1,18 @@
+---
+- hosts: "{{host_app}}"
+  vars:
+    - nginx_host: 192.168.9.50
+    - portal_host: 192.168.9.51
+    - bid_host: 192.168.9.53
+    - sso_host: 192.168.9.54
+    - utr_host: 192.168.9.206
+    - redis_host: 192.168.9.47
+    - uc_host: 192.168.9.45
+    - oracle_host: 192.168.9.209
+    - serverName: www.gky.com
+  tasks:
+  - name: cp hosts
+    template:
+      src: ../templates/hosts.j2
+      dest: /etc/hosts
+      backup: yes
