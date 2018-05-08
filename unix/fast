@@ -1,0 +1,260 @@
+#实施流程--免密
+系统
+    - 创建普通用户，指定家目录1
+    - 配置服务器时间同步1
+    - 系统参数优化1
+    - 日志切割处理01
+
+应用
+    - 安装jdk基础环境  --roles1
+    - keepalived部署
+    - nginx/apache部署，配置文件初始化，优化1
+    - tomcat部署，配置文件初始化，优化
+    - redis部署
+    - oracle安装
+        - oracle优化
+        - 归档空间优化
+        - 归档日志定时清理|RMAN处理
+
+-------------------------
+1.基础
+    --- root免密-push_key.md
+    --- 创建普通用户，指定家目录，设定密码-initial_user.yml
+    --- 优化linux系统配置-ansible -i hosts all -m script -a max_clint.sh
+    check:ansible -i hosts all -m script -a check_max
+    --- 安装jdk环境-install_jdk
+    --- 时间同步-需要修改一下yml文件
+    --- hosts文件
+2.应用
+    --- keepalived部署
+    --- nginx署，配置文件初始化
+    --- tomcat部署，配置文件初始化
+    --- redis部署
+    --- oracle安装
+      --- oracle优化
+      --- 归档日志定时清理|RMAN处理
++supervisor
+
+===
+`expect` root免密
+`addqyy`  ansible xxx -m srcipt -a useradd(useradd,passwd,sudoers,chmod 0755)
+`expect` qyy免密
+`jdk`（user: root）
+`max`  ansible moni -m script -a max -l 10.11.14.9 -u root
+`tomcat`  ansible-playbook main.yml -l 10.11.14.9 --extra-vars "tomcat_port=8080 app_id=portal"
+`webapps` ansible moni -m synchronize -a "src=/home/webapps/apps-portal/portal dest=/home/webapps/apps-portal"  -l 10.11.14.9
+`hosts` 文件  ansible moni -m script -a host -l 10.11.14.9 -u root
+`db_update`  ansible-playbook db_update.yml -l 10.11.14.9
+`yming_update`  ansible-playbook yming.yml -l 10.11.14.9
+
+===
+
+---
+
+1.sh脚本对root用户进行ssh-copy-id
+```
+#!/bin/bash
+SERVERS="192.168.1.10 192.168.1.11"
+PASSWD="123456"
+
+function sshcopyid
+{
+    expect -c "
+        set timeout -1;
+        spawn ssh-copy-id $1;
+        expect {
+            \"yes/no\" { send \"yes\r\" ;exp_contine; }
+            \"password:\" { send \"$PASSWD\r\";exp_continue; }
+        };
+        expect eof;
+    "
+}
+
+for server in $SERVERS
+do
+    sshcopyid $server
+done
+```
+
+2.创建qyy(加sudo权限)
+```
+useradd -d  /home/webapps -m qyy
+echo "zbxQYY2017" | passwd --stdin qyy
+echo "qyy	ALL=(ALL) 	NOPASSWD:ALL" >> /etc/sudoers
+```
+3.优化系统
+```
+ansible xxx -m script -a "max"
+```
+4.安装jdk
+```
+roles:
+   - jdk
+```
+5.时间同步
+```
+---
+- hosts: all:!192.168.9.196
+  gather_facts: Ture
+  vars:
+    - ntp_server: 192.168.9.196
+  tasks:
+#    server
+    - name: install ntp ntpdate
+      yum:
+          name={{ item }}
+          state=latest
+      with_items:
+        - ntpdate
+        - ntp
+    - name: deploy ntp-server.conf
+      template:
+            src=../templates/ntp.conf.j2
+            dest=/etc/ntp.conf
+            backup=yes
+            mode=0644
+    - name: SYNC_HWCLOCK=yes
+      shell:
+            echo "SYNC_HWCLOCK=yes" >> /etc/sysconfig/ntpd
+    - name: chkconfig on
+      shell:
+            chkconfig --levels 235 ntpd on
+    - name: restart ntpd
+      shell: service ntpd restart
+#    client
+    - name: deploy ntp-client
+      cron: name=ntp_client job='ntpdate {{ntp_server}}'
+      tags:
+        - client
+
+```
+--new修改hosts文件
+```
+vars:
+ - serverName: www.gky.com
+ - nginx_host: 192.168.9.232
+ - portal_host: 192.168.9.233
+ - bid_host: 192.168.9.234
+ - sso_host: 192.168.9.235
+ - uc_host: 192.168.9.236
+ - utr_host： 192.168.9.237
+
+tasks:
+- name: cp hosts
+  template:
+    src: ../template/hosts.j2
+    dest: /etc/hosts
+    backup: yes
+
+```
+6.安装nginx
+```
+- shell: wget -O /etc/yum.repos.d/epel-6.repo mirrors.aliyun.com/repo/epel-6.repo && yum clean all && yum makecache
+- name: install nginx
+  yum:
+        name=nginx
+        state=present
+- name: deploy configure
+  template:
+        src=nginx.j2
+        dest=/etc/nginx/nginx.conf
+        backup=yes
+  when:
+        state=restartd
+```
+7.tomcat部署，配置文件初始化
+```
+#单机单tomcat部署
+---
+- hosts: moni
+  remote_user: root
+  vars:
+        tomcat_port: 8085
+        app_id: flow
+        tomcat_version: tomcat8.0.44
+        user_id: qyy
+  tasks:
+        - name: dir tomcat
+          file: path=/home/tomcat state=directory mode=0755 owner={{ user_id }} group={{ user_id }}
+        - name: tomcat deploy
+          unarchive:
+                src=../template/{{ tomcat_version }}.tar.gz
+                dest=/home/tomcat/
+                creates={{ app_id }}
+                copy=yes
+          register: result
+        - name: 'F2 {{ tomcat_version }} >> {{ app_id }}'
+          shell: mv /home/tomcat/{{ tomcat_version }} /home/tomcat/{{ app_id }}
+          when: result|succeeded
+        - name: '{{ app_id }} j2 >> conf'
+          template:
+                src=../template/server.j2
+                dest=/home/tomcat/{{ app_id }}/conf/server.xml
+                backup=yes
+
+```
+**`去掉定义的tomcat_port、app_id采用手动传参`**
+**` ansible-playbook main.yml -l 10.11.14.9 --extra-vars "tomcat_port=8080 app_id=portal"`**
+```
+---
+- hosts: moni
+  remote_user: root
+  vars:
+        tomcat_version: tomcat8.0.44
+        user_id: qyy
+  tasks:
+        - name: dir tomcat
+          file: path=/home/tomcat state=directory mode=0755 owner={{ user_id }} group={{ user_id }}
+        - name: dir webapps
+          file: path=/home/webapps/apps-{{ app_id }} state=directory mode=0755 owner={{ user_id }} group={{ user_id }}
+        - name: tomcat deploy
+          unarchive:
+                src=../template/{{ tomcat_version }}.tar.gz
+                dest=/home/tomcat/
+                creates={{ app_id }}
+                copy=yes
+        - name: 'F2 {{ tomcat_version }} >> {{ app_id }}'
+          shell: cd /home/tomcat && mv {{ tomcat_version }}/ {{ app_id }}/
+        - name: '{{ app_id }} j2 >> conf'
+          template:
+                src=../template/server.j2
+                dest=/home/tomcat/{{ app_id }}/conf/server.xml
+                backup=yes
+
+```
+
+
+
+8.redis部署
+还差点完全成功
+```
+---
+- hosts: moni
+  remote_user: root
+  vars:
+        redis_path: /home/qyy
+        redis_version: redis-3.2.8
+  tasks:
+        - name: dir '{{ redis_path }}'
+          file: path={{ redis_path }} state=directory mode=o644 owner=qyy group=qyy
+        - name: copy redis
+          synchronize: src={{ redis_path }}/{{ redis_version }} dest={{ redis_path }}/
+```
+/etc/rc.local--没验证
+su - qyb  cd /home/qyb/redis-3.2.8/src && nohup ./redis-server redis.conf &
+
+9.数据库--待定
+
+
++supervisor
+```
+vars:
+
+tasks:
+yum:
+ name=supervisor
+ state=persent
+template:
+ src=supervisro.j2
+ dest=/etc/supervisor.conf
+```

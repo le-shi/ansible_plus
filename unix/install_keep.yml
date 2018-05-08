@@ -1,0 +1,39 @@
+---
+- hosts: "{{host_app}}"
+  gather_facts: Ture
+  vars:
+    - epel_6: http://mirrors.aliyun.com/repo/epel-6.repo
+  tasks:
+    - name: "wget {{epel_6}}"
+      get_url:
+        url: "{{epel_6}}"
+        dest: /etc/yum.repos.d/epel-6.repo
+        backup: yes
+      notify:
+        makecache
+    - name: install keepalived
+      yum:
+        name: "{{item}}"
+        state: present
+        update_cache: yes
+      with_items:
+        - keepalived
+        - tree
+        - lrzsz
+        - mlocate
+        - telnet
+    - name: deploy configure
+      template:
+        src: ../templates/keepalived.j2
+        dest: /etc/keepalived/keepalived.conf
+        backup: yes
+      notify:
+         restart_keepalived
+  handlers:
+    - name: restart_keepalived
+      service:
+          name: keepalived
+          state: restarted
+          enabled: yes
+    - name: makecache
+      shell: yum clean all && yum makecache
