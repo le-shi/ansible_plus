@@ -7,7 +7,6 @@
   tasks:
    - name: useradd {{user_name}}
      #创建qyy用户
-<<<<<<< HEAD
      user:
        name: {{user_name}}
        password: {{ user_pass | password_hash('sha512') }}
@@ -21,16 +20,6 @@
        state: present
        line: {{item}}
        validate: 'visudo -cf %s'
-=======
-     user: name={{user_name}}
-           password={{ user_pass | password_hash('sha512') }}
-           createhome=yes
-           home={{user_home}}
-           shell=/bin/bash
-   - name: add sudo {{user_name}}
-     #添加sudo权限
-     lineinfile: dest=/etc/sudoers state=present line={{item}} validate='visudo -cf %s'
->>>>>>> 978294cd412a757ada79b54227c8a842604906ae
      with_items:
       - "{{ user_name }} ALL=(ALL) NOPASSWD: ALL"
       - "Defaults: {{user_name}}  !requiretty"

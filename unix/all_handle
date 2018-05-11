@@ -12,22 +12,14 @@ server:ansible-playbook ntp.yml -i hosts --skip-tags="client" -l ntp_server
 client:ansible-playbook ntp.yml -i hosts --tags="client"<需要修改- hosts: all:!192.168.9.196>
 6.install keepalived<已经针对hosts文件做修改>
 ansible-playbook install_keep.yml -i hosts --extra-vars "host_app=keep_master"
-<<<<<<< HEAD
 ansible-playbook install_keep.yml -i hosts --extra-vars "host_app=keep_backup"
-=======
-ansible-playbook install_keep.yml -i hosts --extra-vars "host_app=keep_slave"
->>>>>>> 978294cd412a757ada79b54227c8a842604906ae
 7.hosts文件>>基于keepalived的安装使用
 ansible-playbook update_hosts.yml -i hosts --extra-vars "host_app=all"
 8.install nginx
 ansible-playbook install_nginx.yml -i hosts
-<<<<<<< HEAD
 9.depoly tomcat8--引入sat模块
 ansible-playbook main.yml -i hosts --extra-vars "host_app=portal app_id=portal tomcat_port=8080"
 10.install redis<开启了{后台守护进程,持久化,日志,最大内存设置为1000mb}>
 ansible-playbook main.yml -i /etc/ansible/webservers.yml --extra-vars "host_app=redis-master" --skip-tags="redis_slave"
 ansible-playbook main.yml -i /etc/ansible/webservers.yml --extra-vars "host_app=redis-slave redis_slave=true" --skip-tags="redis_master"
 11.install oracle
-=======
-9.depoly tomcat8
->>>>>>> 978294cd412a757ada79b54227c8a842604906ae
