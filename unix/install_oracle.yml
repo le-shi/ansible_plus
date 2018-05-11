@@ -164,6 +164,9 @@
       unarchive:
         src: "{{oracle_file_path}}/{{item}}"
         dest: "{{oracle_home}}"
+        owner: "{{oracle_user}}"
+        group: "{{oralce_group_name}}"
+        mode: "u=rwx,g=rwx,o=rx"        
       with_items:
         - "linux-oracle11g-64_1of7.zip"
         - "linux-oracle11g-64_2of7.zip"
@@ -172,7 +175,9 @@
       template:
         src: ../templates/db_install.j2
         dest: "{{oracle_home}}/database/db_install.rsp"
-
+        owner: "{{oracle_user}}"
+        group: "{{oralce_group_name}}"
+        mode: "u=rwx,g=rwx,o=rx"
   handlers:
     - name: epel_check
       shell: yum clean all && yum makecache
