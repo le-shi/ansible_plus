@@ -29,6 +29,7 @@
         backup: yes
       notify:
          restart_keepalived
+<<<<<<< HEAD
     - name: stop iptables
       service:
         name: iptables
@@ -45,5 +46,13 @@
         name: keepalived
         state: restarted
         enabled: yes
+=======
+  handlers:
+    - name: restart_keepalived
+      service:
+          name: keepalived
+          state: restarted
+          enabled: yes
+>>>>>>> 978294cd412a757ada79b54227c8a842604906ae
     - name: makecache
       shell: yum clean all && yum makecache

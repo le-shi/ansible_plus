@@ -6,11 +6,19 @@
     - 日志切割处理01
 
 应用
+<<<<<<< HEAD
     - 安装jdk基础环境1  --roles1
     - keepalived部署1
     - nginx/apache部署，配置文件初始化，优化1
     - tomcat部署，配置文件初始化，优化1
     - redis部署1
+=======
+    - 安装jdk基础环境  --roles1
+    - keepalived部署
+    - nginx/apache部署，配置文件初始化，优化1
+    - tomcat部署，配置文件初始化，优化
+    - redis部署
+>>>>>>> 978294cd412a757ada79b54227c8a842604906ae
     - oracle安装
         - oracle优化
         - 归档空间优化
@@ -23,7 +31,11 @@
     --- 优化linux系统配置-ansible -i hosts all -m script -a max_clint.sh
     check:ansible -i hosts all -m script -a check_max
     --- 安装jdk环境-install_jdk
+<<<<<<< HEAD
     --- 时间同步-需要修改一下yml文件|ansible_skip功能
+=======
+    --- 时间同步-需要修改一下yml文件
+>>>>>>> 978294cd412a757ada79b54227c8a842604906ae
     --- hosts文件
 2.应用
     --- keepalived部署
