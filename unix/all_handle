@@ -4,6 +4,7 @@ bash push_key.md
 ansible-playbook initial_user.yml -i hosts
 3.max_clint
 change:ansible -i hosts all -m script -a max_clint.sh
+change:ansible-playbook max_clint.yml -i hosts
 check:ansible -i hosts all -m script -a check_max.sh
 4.install jdk
 ansible-playbook install_jdk -i hosts
