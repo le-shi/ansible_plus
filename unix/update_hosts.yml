@@ -1,5 +1,6 @@
 ---
 - hosts: "{{host_app}}"
+  remote_user: root
   vars:
     - nginx_host: 192.168.9.50
     - portal_host: 192.168.9.51
