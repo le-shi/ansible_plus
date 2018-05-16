@@ -26,6 +26,7 @@
     redis_maxmemory: "1000mb"
     redis_master_host: "192.168.9.47"
     redis_master_port: "6379"
+    epel_6: http://mirrors.aliyun.com/repo/epel-6.repo
   tasks:
     - name: install | Check if redis local file is already configured.
       stat: path={{ redis_file_path }}
@@ -45,10 +46,18 @@
     - name: install | Confirm the existence of the installation directory.
       file: path={{ software_install_path }} state=directory
 
+    - name: install | "wget {{epel_6}}"
+      get_url:
+        url: "{{epel_6}}"
+        dest: /etc/yum.repos.d/epel-6.repo
+        backup: yes
+      notify:
+        makecache
     - name: install | Ensure gcc packages are installed.
       yum:
         name: "{{ item }}"
-        state: installed
+        state: latest
+        update_cache: yes
       with_items:
         - gcc
         - gcc-c++
@@ -143,5 +152,9 @@
 
     - name: configure | Ensure Redis is running and enabled on boot.
       service: "name={{ redis_daemon }} state=restarted enabled=yes"
+  handlers:
+    - name: makecache
+      shell: yum clean all && yum makecache
+
 #ansible-playbook main.yml -i /etc/ansible/webservers.yml --extra-vars "host_app=redis-master" --skip-tags="redis_slave"
 #ansible-playbook main.yml -i /etc/ansible/webservers.yml --extra-vars "host_app=redis-slave redis_slave=true" --skip-tags="redis_master"
