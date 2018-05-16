@@ -1,6 +1,5 @@
 ---
 - hosts: "{{host_app}}"
-  gather_facts: True
   vars:
     supervisor_version: latest
     supervisor_unix_http_server_file: /var/run/supervisor.sock
@@ -22,6 +21,7 @@
     supervisor_supervisord_childlogdir: /var/log/supervisor
     supervisor_supervisorctl_serverurl: "unix://{{ supervisor_unix_http_server_file }}"
     supervisor_include: '{{supervisor_include_path}}/*.ini'
+    supervisor_bin_path: /usr/local/bin/supervisord
     supervisor_programs_present: {}
     supervisor_programs_absent: {}
     supervisor_groups_present: {}
@@ -131,13 +131,20 @@
 
     - name: 'deploy | configure {{ supervisor_configuration_file }}'
       template:
-        src: ../templates/supervisord.j2
-        dest: "{{ supervisor_configuration_file }}"
+        src: "{{ item.src }}"
+        dest: "{{ item.dest }}"
+        mode: "u=rwx,g=rx,o=rx"
         backup: yes
+      with_items:
+        - { src: '../templates/supervisord.j2', dest: '{{ supervisor_configuration_file }}'}
+        - { src: '../templates/supervisord_init.j2', dest: '/etc/init.d/supervisord'}
       notify: reload_supervisord
-
+      
   handlers:
     - name: epel_check
       shell: yum clean all && yum makecache
     - name: reload_supervisord
-      shell: "supervisord -c {{supervisor_configuration_file}}"
+      service:
+        name: supervisord
+        state: restarted
+        enabled: on
