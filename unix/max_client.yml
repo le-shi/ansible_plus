@@ -1,34 +1,33 @@
 ---
 - hosts: all
-  vars:
+  remote_user: root
   tasks:
-    - name: check | profile
+    - name: check | /etc/profile
       lineinfile:
         path: /etc/profile
         state: present
-        regexp: "^ulimit"
         line: "{{item}}"
       with_items:
         - "ulimit -n  65536"
-    - name: check | limits.conf
+    - name: check | /etc/security/limits.conf
       lineinfile:
         path: /etc/security/limits.conf
         state: present
         line: "{{item}}"
       with_items:
-        - "* soft nofile  65535"
-        - "* hard nofile  65535"
-        - "* soft nproc  65535"
-        - "* hard nproc  65535"
-    - name: check | 90-nproc.conf
+        - "* soft nofile  65536"
+        - "* hard nofile  65536"
+        - "* soft nproc  65536"
+        - "* hard nproc  65536"
+    - name: check | /etc/security/limits.d/90-nproc.conf
       lineinfile:
         path: /etc/security/limits.d/90-nproc.conf
         state: present
         line: "{{item}}"
       with_items:
-        - "* soft nproc 65535"
-        - "* hard nproc 65535"
-    - name: check | sysctl
+        - "* soft nproc 65536"
+        - "* hard nproc 65536"
+    - name: check | /etc/sysctl.conf
       sysctl:
         name: "{{item.name}}"
         value: "{{item.value}}"
@@ -39,7 +38,7 @@
         - { name: 'net.ipv4.ip_local_port_range', value: '1024 65000' }
         - { name: 'net.ipv4.tcp_fin_timeout', value: '30' }
         - { name: 'net.core.somaxconn', value: '1024' }
-    - name: check | rc.locl
+    - name: check | /etc/rc.locl
       lineinfile:
         path: /etc/rc.local
         state: present
