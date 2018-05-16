@@ -9,7 +9,7 @@
       file:
         path: "/home/{{item}}"
         state: directory
-        mode: "u=rwx,g=rwx,o=rx"
+        mode: "u=rwx,g=rx,o=rx"
         owner: "{{ user_id }}"
         group: "{{ user_id }}"
       with_items:
