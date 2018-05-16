@@ -1,0 +1,23 @@
+---
+- hosts: all
+  tasks:
+  - name: dir
+    file:
+     path: "{{item}}"
+     state: directory
+     owner: "{{user_id}}"
+     group: "{{user_id}}"
+    with_items:
+     - /home/{{user_id}}/{{app_id}}
+     - /home/{{user_id}}/{{app_id}}/logs
+  - name: 'copy {{ app_id }}'
+    template:
+      src: ../templates/super.j2
+      dest: /etc/supervisor/conf.d/{{app_id}}.ini
+      backup: yes
+    notify: reload
+  handlers:
+  - name: reload
+    command: supervisorctl update
+#- app_id: pmps
+#- user_id: pt

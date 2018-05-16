@@ -1,0 +1,143 @@
+---
+- hosts: "{{host_app}}"
+  gather_facts: True
+  vars:
+    supervisor_version: latest
+    supervisor_unix_http_server_file: /var/run/supervisor.sock
+    supervisor_unix_http_server_chmod: '0700'
+    supervisor_system_user: root
+    supervisor_system_group: root
+    supervisor_configuration_file_path: /etc/supervisor
+    supervisor_include_path: "{{ supervisor_configuration_file_path }}/conf.d"
+    supervisor_configuration_file: "/etc/supervisord.conf"
+    supervisor_inet_http_server_enabled: True
+    supervisor_inet_http_server_ipaddr: "*"
+    supervisor_inet_http_server_port: 9001
+    supervisor_inet_http_server_username: admin
+    supervisor_inet_http_server_password: '1234567'
+    supervisor_supervisord_restart_sec: 5
+    supervisor_supervisord_nodaemon: false
+    supervisor_supervisord_logfile: /var/log/supervisor/supervisord.log
+    supervisor_supervisord_pidfile: /var/run/supervisord.pid
+    supervisor_supervisord_childlogdir: /var/log/supervisor
+    supervisor_supervisorctl_serverurl: "unix://{{ supervisor_unix_http_server_file }}"
+    supervisor_include: '{{supervisor_include_path}}/*.ini'
+    supervisor_programs_present: {}
+    supervisor_programs_absent: {}
+    supervisor_groups_present: {}
+    supervisor_groups_absent: {}
+    epel_6: "http://mirrors.aliyun.com/repo/epel-6.repo"
+    python_version: "2.7.11"
+    python_version_d: "2.7"
+    python_get_url: "https://www.python.org/ftp/python/{{python_version}}/Python-{{python_version}}.tgz"
+    python_get_path: /tmp
+  tasks:
+    - name: "wget {{epel_6}}"
+      get_url:
+        url: "{{epel_6}}"
+        dest: /etc/yum.repos.d/epel-6.repo
+        backup: yes
+      notify: epel_check
+    - name: check | yum packages
+      yum:
+        name: "{{ item }}"
+        state: latest
+        update_cache: yes
+      with_items:
+        - gcc
+        - gcc-c++
+        - glibc
+        - glibc-common
+        - glibc-devel
+        - glibc-headers
+        - libaio
+        - libaio
+        - libaio-devel
+        - libaio-devel
+        - libgcc
+        - libgcc
+        - libstdc++
+        - libstdc++
+        - libstdc++-devel
+        - make
+        - numactl
+        - sysstat
+        - libXp
+        - unixODBC.x86_64
+        - libevent
+        - memcached
+        - libmemcached
+        - libmemcached-devel
+        - nss
+        - zlib
+        - zlib-devel
+        - openssl
+        - openssl-devel
+        - python-devel
+        - readline-static
+        - openssl-static
+      tags: yum
+    - name: 'Download | Python {{python_version}} file.'
+      get_url:
+        url: "{{ python_get_url }}"
+        dest: "{{ python_get_path }}"
+      connection: local
+
+    - name: 'Check | path {{ python_get_path }}/Python-{{ python_version }}'
+      stat:
+        path: "{{ python_get_path }}/Python-{{ python_version }}"
+      register: python_file_request
+
+    - name: 'install | unzip Python {{python_version}}'
+      unarchive:
+        src: "{{ python_get_path }}/Python-{{python_version}}.tgz"
+        dest: "{{ python_get_path }}"
+        creates: "{{ python_get_path }}/Python-{{python_version}}"
+        copy: yes
+      when: not python_file_request.stat.exists
+
+    - name: 'install | configure'
+      shell: "cd {{ python_get_path }}/Python-{{ python_version }} && ./configure"
+      ignore_errors: True
+      register: python_configure
+      when: not python_file_request.stat.exists
+
+    - name: 'install | make and make install'
+      shell: "cd {{ python_get_path }}/Python-{{ python_version }} && make && make install"
+      when: ( not python_file_request.stat.exists and python_configure | succeeded)
+
+    - name: 'install | install pip'
+      shell: "curl https://bootstrap.pypa.io/get-pip.py | python{{ python_version_d }}"
+
+    - name: 'install | install supervisor'
+      pip:
+        name: "{{ item }}"
+        state: latest
+      with_items:
+        - pip
+        - setuptools
+        - supervisor
+
+    - name: 'Check | {{ supervisor_configuration_file }}'
+      file:
+        name: "{{ item }}"
+        state: directory
+        owner: "{{ supervisor_system_user }}"
+        group: "{{ supervisor_system_group }}"
+        mode: "u=rwx,g=rx,o=rx"
+      with_items:
+        - "{{ supervisor_include_path }}"
+        - "{{ supervisor_supervisord_childlogdir }}"
+
+    - name: 'deploy | configure {{ supervisor_configuration_file }}'
+      template:
+        src: ../templates/supervisord.j2
+        dest: "{{ supervisor_configuration_file }}"
+        backup: yes
+      notify: reload_supervisord
+
+  handlers:
+    - name: epel_check
+      shell: yum clean all && yum makecache
+    - name: reload_supervisord
+      shell: "supervisord -c {{supervisor_configuration_file}}"
