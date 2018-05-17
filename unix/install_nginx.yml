@@ -5,6 +5,8 @@
     - log_path: /var/log/nginx
     - serverName: www.gky.com
     - epel_6: http://mirrors.aliyun.com/repo/epel-6.repo
+    - user_id: qyy
+
   tasks:
     - name: "wget {{epel_6}}"
       get_url:
@@ -38,6 +40,15 @@
         backup: yes
       notify:
          restart_nginx
+    - name: Judgment  webapps  directory
+      file:
+        path: "/home/{{item}}"
+        state: directory
+        mode: "u=rwx,g=rx,o=rx"
+        owner: "{{ user_id }}"
+        group: "{{ user_id }}"
+      with_items:
+        - webapps
   handlers:
     - name: restart_nginx
       service:
