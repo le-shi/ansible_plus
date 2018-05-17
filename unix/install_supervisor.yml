@@ -43,7 +43,11 @@
         name: "{{ item }}"
         state: latest
         update_cache: yes
+<<<<<<< HEAD
       ignore_errors: True
+=======
+        ignore_errors: True
+>>>>>>> 113ae4cb4a5ebfa61893a4c4674499c8bc483ac9
       with_items:
         - gcc
         - gcc-c++
