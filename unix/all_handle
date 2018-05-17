@@ -3,7 +3,7 @@ bash push_key.md
 2.userad
 ansible-playbook initial_user.yml -i hosts
 3.max_clint
-change:ansible -i hosts all -m script -a max_clint.sh
+#change:ansible -i hosts all -m script -a max_clint.sh
 change:ansible-playbook max_clint.yml -i hosts
 check:ansible -i hosts all -m script -a check_max.sh
 4.install jdk
@@ -18,10 +18,18 @@ ansible-playbook install_keep.yml -i hosts --extra-vars "host_app=keep_backup"
 ansible-playbook update_hosts.yml -i hosts --extra-vars "host_app=all"
 8.install nginx
 ansible-playbook install_nginx.yml -i hosts
-9.depoly tomcat8--引入sat模块
-ansible-playbook main.yml -i hosts --extra-vars "host_app=portal app_id=portal tomcat_port=8080"
+9.depoly tomcat8--引入stat模块
+ansible-playbook install_tomcat.yml -i hosts --extra-vars "host_app=portal app_id=portal tomcat_port=8080"
 10.install redis<开启了{后台守护进程,持久化,日志,最大内存设置为1000mb}>
-ansible-playbook main.yml -i /etc/ansible/webservers.yml --extra-vars "host_app=redis-master" --skip-tags="redis_slave"
-ansible-playbook main.yml -i /etc/ansible/webservers.yml --extra-vars "host_app=redis-slave redis_slave=true" --skip-tags="redis_master"
+install_master:ansible-playbook install_redis.yml -i /etc/ansible/webservers.yml --extra-vars "host_app=redis-master" --skip-tags="redis_slave"
+install_slave:ansible-playbook install_redis.yml -i /etc/ansible/webservers.yml --extra-vars "host_app=redis-slave redis_slave=true" --skip-tags="redis_master"
 11.install oracle
-ansible-playbook main.yml -i /etc/ansible/webservers.yml
+ansible-playbook install_oracle.yml -i /etc/ansible/webservers.yml
+12.install supervisor--仅安装，app接管需自行添加
+install:ansible-playbook install_supervisor.yml -i /etc/ansible/webservers.yml --extra-vars "host_app=all"
+app接管(tomcat):ansible-playbook supervisorctl.yml -i /etc/ansible/webservers.yml --extra-vars "host_app=portal app_id=portal" --tags="tomcat"
+app接管(tomcat):export id=portal && ansible-playbook supervisorctl.yml -i /etc/ansible/webservers.yml --extra-vars "host_app=$id app_id=$id" --tags="tomcat"//一般host_app和app_id名称一致
+app接管(nginx):ansible-playbook supervisorctl.yml -i /etc/ansible/webservers.yml --extra-vars "host_app=nginx" --tags="nginx"
+---
+webapps_deploy
+ansible-playbook deploy.yml -i /etc/ansible/webservers.yml --extra-vars "host_app=portal" --tags "portal"

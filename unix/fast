@@ -11,7 +11,7 @@
     - nginx/apache部署，配置文件初始化，优化1
     - tomcat部署，配置文件初始化，优化1
     - redis部署1
-    - oracle安装
+    - oracle安装0-1
         - oracle优化
         - 归档空间优化
         - 归档日志定时清理|RMAN处理
