@@ -11,7 +11,7 @@
     - tomcat_user: qyy
     - tomcat_java_home: "/usr/java/jdk1.7.0_80"
   tasks:
-    - name: Deploy | web {{ host_app }} group
+    - name: 'Deploy | web {{ host_app }} group'
       template:
         src: ../templates/nginx.j2
         dest: "{{ supervisor_include_path }}/nginx.ini"
@@ -19,21 +19,22 @@
       notify:
         update_supervisorctl
       tags: nginx
-    - name: Deploy | tomcat {{ host_app }} group
+
+    - name: 'Deploy | tomcat {{ host_app }} group ini setenv'
       template:
         src: "../templates/{{ item.j2_file }}"
         dest: "{{ item.ini_file }}"
         owner: "{{ tomcat_user }}"
         group: "{{ tomcat_user }}"
-        mode: "w=rwx,g=rx,o=rx"
+        mode: "u=rwx,g=rx,o=rx"
         backup: yes
       with_items:
         - { j2_file: 'tomcat.j2', ini_file: '{{ supervisor_include_path }}/{{ app_id }}.ini' }
         - { j2_file: 'setenv.j2', ini_file: '{{ tomcat_bin_path }}/bin/setenv.sh' }
         - { j2_file: 'supervisord-wrapper.j2', ini_file: '{{ tomcat_bin_path }}/bin/supervisord-wrapper.sh' }
+      tags: tomcat
       notify:
         update_supervisorctl
-      tags: tomcat
   handlers:
     - name: update_supervisorctl
       command: supervisorctl update
