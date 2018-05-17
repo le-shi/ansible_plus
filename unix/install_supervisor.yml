@@ -6,6 +6,7 @@
     supervisor_unix_http_server_chmod: '0700'
     supervisor_system_user: root
     supervisor_system_group: root
+    supervisor_pulse_user: qyy
     supervisor_configuration_file_path: /etc/supervisor
     supervisor_include_path: "{{ supervisor_configuration_file_path }}/conf.d"
     supervisor_configuration_file: "/etc/supervisord.conf"
@@ -77,11 +78,24 @@
         - readline-static
         - openssl-static
       tags: yum
+    - name: install | Check if Python local file is already configured.
+      stat:
+        path: "{{ python_get_path }}/Python-{{python_version}}.tgz"
+      ignore_errors: True
+      connection: local
+      register: python_get_result
+
+    - name: install | Create software directory.
+      file: path={{ python_get_path }} state=directory
+      connection: local
+      when: not python_get_result.stat.exists
+
     - name: 'Download | Python {{python_version}} file.'
       get_url:
         url: "{{ python_get_url }}"
         dest: "{{ python_get_path }}"
       connection: local
+      when: not python_get_result.stat.exists
 
     - name: 'Check | path {{ python_get_path }}/Python-{{ python_version }}'
       stat:
@@ -139,7 +153,7 @@
         - { src: '../templates/supervisord.j2', dest: '{{ supervisor_configuration_file }}'}
         - { src: '../templates/supervisord_init.j2', dest: '/etc/init.d/supervisord'}
       notify: reload_supervisord
-      
+
   handlers:
     - name: epel_check
       shell: yum clean all && yum makecache
