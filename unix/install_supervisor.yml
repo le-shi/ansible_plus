@@ -6,7 +6,6 @@
     supervisor_unix_http_server_chmod: '0700'
     supervisor_system_user: root
     supervisor_system_group: root
-    supervisor_pulse_user: qyy
     supervisor_configuration_file_path: /etc/supervisor
     supervisor_include_path: "{{ supervisor_configuration_file_path }}/conf.d"
     supervisor_configuration_file: "/etc/supervisord.conf"
@@ -44,6 +43,7 @@
         name: "{{ item }}"
         state: latest
         update_cache: yes
+      ignore_errors: True
       with_items:
         - gcc
         - gcc-c++
