@@ -94,6 +94,7 @@
         - { name: 'net.core.rmem_max', value: '262144' }
         - { name: 'net.core.wmem_default', value: '262144' }
         - { name: 'net.core.wmem_max', value: '262144' }
+        - { name: 'vm.swappiness', value: '60' }
     - name: check | oracle-recommended PAM config
       lineinfile:
         dest: /etc/pam.d/login

@@ -1,5 +1,5 @@
 1.root免密
-bash push_key.md
+bash push_key.md root
 2.userad
 ansible-playbook initial_user.yml -i hosts
 3.max_clint
