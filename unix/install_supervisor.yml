@@ -132,7 +132,7 @@
         - setuptools
         - supervisor
 
-    - name: 'Check | {{ supervisor_configuration_file }}'
+    - name: 'Check | {{ supervisor_configuration_file }} ini Directory'
       file:
         name: "{{ item }}"
         state: directory

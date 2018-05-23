@@ -6,8 +6,8 @@
     - nginx_log_path: /var/log/nginx/access.log
     - nginx_conf_path: /etc/nginx/nginx.conf
     - nginx_stopsignal_mode: TERM
-    - tomcat_bin_path: /home/tomcat/{{app_id}}
-    - tomcat_log_path: /home/tomcat/{{app_id}}/logs/catalina.out
+    - tomcat_bin_path: "/home/tomcat/{{app_id}}"
+    - tomcat_log_path: "{{tomcat_bin_path}}/logs/catalina.out"
     - tomcat_user: qyy
     - tomcat_java_home: "/usr/java/jdk1.7.0_80"
   tasks:
@@ -42,3 +42,4 @@
 
 # ansible-playbook main_ctl.yml -i /etc/ansible/webservers.yml --extra-vars "host_app=sso app_id=sso" --tags="tomcat"
 # ansible-playbook main_ctl.yml -i /etc/ansible/webservers.yml --extra-vars "host_app=nginx" --tags="nginx"
+#部署路径不同，更改tomcat_bin_path
