@@ -1,0 +1,16 @@
+[program:{{ app_id }}]
+command={{ tomcat_bin_path }}/bin/supervisord-wrapper.sh
+stdout_logfile={{ tomcat_log_path }}
+priority=2
+numprocs=1
+autostart=true
+autorestart=true
+startretries=10
+environment=HOME="{{ tomcat_bin_path }}",USER="{{ tomcat_user }}"
+user={{ tomcat_user }}
+exitcodes=0
+stopsignal=QUIT
+stopwaitsecs=5
+stopasgroup=true
+killasgroup=true
+redirect_stderr=true

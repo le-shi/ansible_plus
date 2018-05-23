@@ -1,0 +1,18 @@
+---
+- hosts: all
+  vars:
+   - user_name: qyy
+   - user_pass: 123qwe!@#QWE
+   - user_home: /home/webapps
+  tasks:
+   - name: useradd {{user_name}}
+     user: name={{user_name}}
+           password={{ user_pass | password_hash('sha512') }}
+           createhome=yes
+           home={{user_home}}
+           shell=/bin/bash
+   - name: add sudo {{user_name}}
+     lineinfile: dest=/etc/sudoers state=present line={{item}} validate='visudo -cf %s'
+     with_items:
+      - "{{ user_name }} ALL=(ALL) NOPASSWD: ALL"
+      - "Defaults: {{user_name}}  !requiretty"

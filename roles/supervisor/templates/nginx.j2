@@ -1,0 +1,10 @@
+[program:nginx]
+command=/usr/sbin/nginx -c {{ nginx_conf_path }} -g 'daemon off;'
+stdout_logfile={{ nginx_log_path }}
+priority=2
+numprocs=1
+autostart=true
+autorestart=true
+startretries=10
+exitcodes=0
+stopsignal={{ nginx_stopsignal_mode | default('QUIT') }}

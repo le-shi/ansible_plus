@@ -1,0 +1,7 @@
+---
+- hosts: uc
+  vars:
+  - app_id: "uc"
+  tasks:
+  - name: deploy {{ app_id }}
+    include: tomcat.yml

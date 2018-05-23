@@ -1,0 +1,36 @@
+- hosts: all
+  vars:
+   #dz: "portal.xemas.com.cn"
+   #ym: "web.unibid.cn"
+   dz: "127.0.0.1"
+   ym: "UC"
+  tasks:
+  - name: "lineinfile {{ ym }} > {{dz}}"
+    shell: sed -i 's/{{ ym }}/{{ dz }}/g' {{ item }}
+    with_items:
+       - /home/webapps/apps-utr/utr/WEB-INF/classes/config/eid.properties
+       - /home/webapps/apps-utr/utr/WEB-INF/classes/config/uct_client.properties
+       - /home/webapps/apps-utr/utr/WEB-INF/classes/config/zbx.properties
+       - /home/webapps/apps-gzq/gzq/WEB-INF/classes/config/uct_client.properties
+       - /home/webapps/apps-gzq/gzq/WEB-INF/classes/config/zbx.properties
+       - /home/webapps/apps-uc/uc/WEB-INF/classes/config/eid.properties
+       - /home/webapps/apps-uc/uc/WEB-INF/classes/config/zbx_attachment.properties
+       - /home/webapps/apps-uc/uc/WEB-INF/classes/config/uct_client.properties
+       - /home/webapps/apps-uc/uc/WEB-INF/classes/config/zbx.properties
+       - /home/webapps/apps-flow/flow/WEB-INF/classes/config/eid.properties
+       - /home/webapps/apps-flow/flow/WEB-INF/classes/config/uct_client.properties
+       - /home/webapps/apps-flow/flow/WEB-INF/classes/config/zbx.properties
+       - /home/webapps/apps-portal/portal/WEB-INF/classes/config/eid.properties
+       - /home/webapps/apps-portal/portal/WEB-INF/classes/config/uct_client.properties
+       - /home/webapps/apps-portal/portal/WEB-INF/classes/config/zbx.properties
+       - /home/webapps/apps-portal/portal/WEB-INF/classes/config.properties
+       - /home/webapps/apps-cms/cms/WEB-INF/classes/config/eid.properties
+       - /home/webapps/apps-cms/cms/WEB-INF/classes/config/uct_client.properties
+       - /home/webapps/apps-cms/cms/WEB-INF/classes/config/zbx.properties
+       - /home/webapps/apps-utrj/utrj/WEB-INF/classes/config/uct_client.properties
+       - /home/webapps/apps-utrj/utrj/WEB-INF/classes/config/zbx_utrj.properties
+       - /home/webapps/apps-bid/bid/WEB-INF/classes/config/eid.properties
+       - /home/webapps/apps-bid/bid/WEB-INF/classes/config/uct_client.properties
+       - /home/webapps/apps-bid/bid/WEB-INF/classes/config/zbx.properties
+       - /home/webapps/apps-sso/sso/WEB-INF/classes/config/zbx.properties
+

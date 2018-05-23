@@ -1,0 +1,22 @@
+- name: deploy {{ app_id }}_tomcat_dir
+  file: 
+    name=/home/tomcat 
+    state=directory 
+    owner=qyb 
+    group=qyb 
+    mode=755
+- name: deploy {{ app_id }}_tomcat
+  copy: 
+    src={{ app_id }}
+    dest=/home/tomcat/{{ app_id }}
+- name: deploy {{ app_id }}_webapps_dir
+  file: 
+    name=/home/webapps 
+    state=directory 
+    owner=qyb 
+    group=qyb 
+    mode=755
+- name: deploy {{ app_id }}_webapps
+  copy: 
+    src=webapps/apps-{{ app_id }}
+    dest=/home/wenapps/apps-{{ app_id }}

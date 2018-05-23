@@ -1,0 +1,7 @@
+---
+- hosts: portal
+  vars:
+  - app_id: "portal"
+  tasks:
+  - name: deploy {{ app_id }}
+    include: tomcat.yml

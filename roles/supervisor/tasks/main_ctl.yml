@@ -1,0 +1,45 @@
+---
+- hosts: "{{host_app}}"
+  vars:
+    - supervisor_configuration_file_path: /etc/supervisor
+    - supervisor_include_path: "{{ supervisor_configuration_file_path }}/conf.d"
+    - nginx_log_path: /var/log/nginx/access.log
+    - nginx_conf_path: /etc/nginx/nginx.conf
+    - nginx_stopsignal_mode: TERM
+    - tomcat_bin_path: "/home/tomcat/{{app_id}}"
+    - tomcat_log_path: "{{tomcat_bin_path}}/logs/catalina.out"
+    - tomcat_user: qyy
+    - tomcat_java_home: "/usr/java/jdk1.7.0_80"
+  tasks:
+    - name: 'Deploy | web {{ host_app }} group'
+      template:
+        src: ../templates/nginx.j2
+        dest: "{{ supervisor_include_path }}/nginx.ini"
+        backup: yes
+      notify:
+        update_supervisorctl
+      tags: nginx
+
+    - name: 'Deploy | tomcat {{ host_app }} group ini setenv'
+      template:
+        src: "../templates/{{ item.j2_file }}"
+        dest: "{{ item.ini_file }}"
+        owner: "{{ tomcat_user }}"
+        group: "{{ tomcat_user }}"
+        mode: "u=rwx,g=rx,o=rx"
+        backup: yes
+      with_items:
+        - { j2_file: 'tomcat.j2', ini_file: '{{ supervisor_include_path }}/{{ app_id }}.ini' }
+        - { j2_file: 'setenv.j2', ini_file: '{{ tomcat_bin_path }}/bin/setenv.sh' }
+        - { j2_file: 'supervisord-wrapper.j2', ini_file: '{{ tomcat_bin_path }}/bin/supervisord-wrapper.sh' }
+      tags: tomcat
+      notify:
+        update_supervisorctl
+  handlers:
+    - name: update_supervisorctl
+      command: supervisorctl update
+
+
+# ansible-playbook main_ctl.yml -i /etc/ansible/webservers.yml --extra-vars "host_app=sso app_id=sso" --tags="tomcat"
+# # ansible-playbook main_ctl.yml -i /etc/ansible/webservers.yml --extra-vars "host_app=nginx" --tags="nginx"
+#

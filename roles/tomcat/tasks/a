@@ -1,0 +1,7 @@
+--extra-vars "host_app=sso app_id=sso tomcat_port=8084"
+--extra-vars "host_app=utr app_id=utr tomcat_port=8081"
+--extra-vars "host_app=utr app_id=flow tomcat_port=8085"
+--extra-vars "host_app=utr app_id=cms tomcat_port=8088"
+--extra-vars "host_app=utr app_id=gzq tomcat_port=8087"
+--extra-vars "host_app=utr app_id=utrj tomcat_port=8086"
+--extra-vars "host_app=oracle app_id=uc tomcat_port=8083"
