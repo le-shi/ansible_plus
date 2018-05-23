@@ -1,0 +1,10 @@
+#- hosts: all 
+#  remote_user: root
+#  tasks:
+- name : /usr/java dir
+  tags:
+   - jdk_dir
+  file:  path=/usr/java/ state=directory group=root owner=root mode=755
+- name : '{{ jdk_version }}-linux-x64.tar.gz'
+  unarchive : src={{ jdk_home }}/{{ jdk_version }}-linux-x64.tar.gz dest=/usr/java/ creates={{ jdk_dest_Home }}
+  notify: modify_profile

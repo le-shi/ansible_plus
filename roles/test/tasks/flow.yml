@@ -1,0 +1,7 @@
+---
+- hosts: flow
+  vars:
+  - app_id: "flow"
+  tasks:
+  - name: deploy {{ app_id }}
+    include: tomcat.yml

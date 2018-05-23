@@ -1,0 +1,184 @@
+---
+- hosts: oracle
+  gather_facts: true
+  vars:
+    oracle_user: oracle
+    oracle_pass: 123qwe!@#QWE
+    oracle_home: "/home/oracle"
+    oracle_version: "11.2.0"
+    oracle_version_release: "{{oracle_version}}.4.0"
+    oracle_install_option: INSTALL_DB_SWONLY
+    oracle_hostname: oracledb
+    oralce_group_name: oinstall
+    oracle_inventory_location: "{{oracle_home}}/oracle/oraInventory"
+    oracle_languages: "en,zh_CN"
+    oracle_install_home: "{{oracle_home}}/oracle/product/{{oracle_version}}/db_1"
+    oracle_install_base: "{{oracle_home}}/oracle"
+    oracle_edition: EE
+    oracle_install_DBA_group: dba
+    oracle_install_OPER_group: "{{oralce_group_name}}"
+    oracle_install_autoupdates: SKIP_UPDATES
+    oracle_nls_languages: "AMERICAN_AMERICA.ZHS16GBK"
+    oracle_sid: orcl
+    oracle_file_path: "/home/oracle"
+    epel_6: http://mirrors.aliyun.com/repo/epel-6.repo
+  tasks:
+    - name: "wget {{epel_6}}"
+      get_url:
+        url: "{{epel_6}}"
+        dest: /etc/yum.repos.d/epel-6.repo
+        backup: yes
+      notify: epel_check
+    - name: check | yum packages
+      yum:
+        name: "{{ item }}"
+        state: latest
+        update_cache: yes
+      with_items:
+        - binutils.x86_64
+        - compat-libstdc++-33.x86_64
+        - compat-libstdc++-33.i686
+        - elfutils-libelf.x86_64
+        - elfutils-libelf-devel.x86_64
+        - expat.x86_64
+        - gcc.x86_64
+        - gcc-c++.x86_64
+        - glibc.i686
+        - glibc.x86_64
+        - glibc-common
+        - glibc-devel
+        - glibc-headers
+        - libaio.x86_64
+        - libaio.i686
+        - libaio-devel.i686
+        - libaio-devel.x86_64
+        - libgcc.i686
+        - libgcc.x86_64
+        - libstdc++.x86_64
+        - libstdc++.i686
+        - libstdc++-devel
+        - make
+        - numactl
+        - ksh
+        - sysstat.x86_64
+        - xorg-x11-xauth.x86_64
+        - libXp
+        - unixODBC.x86_64
+    - name: check | ulimits
+      lineinfile:
+        path: /etc/security/limits.conf
+        line: "{{ item }}"
+        state: present
+      with_items:
+        - "oracle soft nofile 65536"
+        - "oracle hard nofile 65536"
+        - "oracle soft nproc 65536"
+        - "oracle hard nproc 65536"
+        - "oracle soft stack 65536"
+        - "oracle hard stack 65536"
+    - name: check | set sysctl
+      sysctl:
+        name: "{{item.name}}"
+        value: "{{item.value}}"
+        state: present
+        ignoreerrors: yes
+        reload: yes
+      with_items:
+        - { name: 'kernel.shmmax', value: '2147483648' }
+        - { name: 'kernel.shmall', value: '2097152' }
+        - { name: 'kernel.shmmni', value: '4096' }
+        - { name: 'kernel.sem', value: '250 32000 100 128' }
+        - { name: 'fs.file-max', value: '65536' }
+        - { name: 'net.ipv4.ip_local_port_range', value: '1024 65000 ' }
+        - { name: 'net.core.rmem_default', value: '262144' }
+        - { name: 'net.core.rmem_max', value: '262144' }
+        - { name: 'net.core.wmem_default', value: '262144' }
+        - { name: 'net.core.wmem_max', value: '262144' }
+    - name: check | oracle-recommended PAM config
+      lineinfile:
+        dest: /etc/pam.d/login
+        state: present
+        line: "session required pam_limits.so"
+    - name: check | set selinux disable
+      lineinfile:
+        path: /etc/selinux/config
+        regexp: '^SELINUX='
+        line: 'SELINUX=disabled'
+    - name: check | set hostname
+      hostname: name="{{ oracle_hostname }}"
+    - name: check | set /etc/hosts
+      lineinfile:
+        path: /etc/hosts
+        regexp: "{{ansible_hostname}}"
+        line: "{{ansible_default_ipv4.address}} {{ansible_hostname}}"
+    - name: check | DBA_GROUP
+      group:
+        name: "{{item}}"
+        state: present
+      with_items:
+        - "{{ oralce_group_name }}"
+        - "{{ oracle_install_DBA_group }}"
+    - name: check | DBA_USER
+      user:
+        name: "{{oracle_user}}"
+        password: "{{ oracle_pass | password_hash('sha512') }}"
+        group: "{{ oralce_group_name }}"
+        groups: "{{ oracle_install_DBA_group }}"
+        createhome: yes
+        home: "{{oracle_home}}"
+        shell: /bin/bash
+    - name: check | oraInst_loc
+      file:
+        name: /etc/oraInst.loc
+        state: touch
+    - name: initial |  oraInst_loc
+      lineinfile:
+        path: /etc/oraInst.loc
+        backrefs: no
+        state: present
+        regexp: "{{item.name}}"
+        line: "{{item.name}}{{item.value}}"
+        owner: "{{oracle_user}}"
+        group: "{{oralce_group_name}}"
+        mode: "u=rwx,g=rwx,o=r"
+      with_items:
+        - { name: 'inventory_loc=', value: '{{ oracle_inventory_location }}' }
+        - { name: 'inst_group=', value: '{{ oralce_group_name }}' }
+    - name: initial | set "{{oracle_user}}" env
+      lineinfile:
+        path: "{{oracle_home}}/.bash_profile"
+        backrefs: no
+        state: present
+        line: "{{item}}"
+      with_items:
+        - "export ORACLE_BASE={{ oracle_install_base }}"
+        - "export ORACLE_HOME=$ORACLE_BASE/product/11.2.0/db_1"
+        - "export PATH=/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin:/root/bin$PATH:$ORACLE_HOME/bin"
+        - "export ORACLE_SID={{ oracle_sid }}"
+        - "export NLS_LANG={{ oracle_nls_languages }}"
+    - name: initial | oracle install database
+      stat:
+        path: "{{oracle_home}}/database"
+      register: database
+    - name: initial | oracle11g zip
+      unarchive:
+        src: "{{oracle_file_path}}/{{item}}"
+        dest: "{{oracle_home}}"
+        owner: "{{oracle_user}}"
+        group: "{{oralce_group_name}}"
+        mode: "u=rwx,g=rwx,o=rx"
+      with_items:
+        - "linux-oracle11g-64_1of7.zip"
+        - "linux-oracle11g-64_2of7.zip"
+      when: database.stat.isdir is not defined
+    - name: initial | db_install.rsp
+      template:
+        src: ../templates/db_install.j2
+        dest: "{{oracle_home}}/database/db_install.rsp"
+        owner: "{{oracle_user}}"
+        group: "{{oralce_group_name}}"
+        mode: "u=rwx,g=rwx,o=rx"
+  handlers:
+    - name: epel_check
+      shell: yum clean all && yum makecache
+

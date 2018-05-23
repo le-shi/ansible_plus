@@ -1,0 +1,46 @@
+---
+- hosts: all
+  remote_user: root
+  tasks:
+    - name: check | /etc/profile
+      lineinfile:
+        path: /etc/profile
+        state: present
+        line: "{{item}}"
+      with_items:
+        - "ulimit -n  65536"
+    - name: check | /etc/security/limits.conf
+      lineinfile:
+        path: /etc/security/limits.conf
+        state: present
+        line: "{{item}}"
+      with_items:
+        - "* soft nofile  65536"
+        - "* hard nofile  65536"
+        - "* soft nproc  65536"
+        - "* hard nproc  65536"
+    - name: check | /etc/security/limits.d/90-nproc.conf
+      lineinfile:
+        path: /etc/security/limits.d/90-nproc.conf
+        state: present
+        line: "{{item}}"
+      with_items:
+        - "* soft nproc 65536"
+        - "* hard nproc 65536"
+    - name: check | /etc/sysctl.conf
+      sysctl:
+        name: "{{item.name}}"
+        value: "{{item.value}}"
+        state: present
+        ignoreerrors: yes
+        reload: yes
+      with_items:
+        - { name: 'net.ipv4.ip_local_port_range', value: '1024 65000' }
+        - { name: 'net.ipv4.tcp_fin_timeout', value: '30' }
+        - { name: 'net.core.somaxconn', value: '1024' }
+    - name: check | /etc/rc.locl
+      lineinfile:
+        path: /etc/rc.local
+        state: present
+        line: "/sbin/ifconfig eth1 txqueuelen 5000"
+

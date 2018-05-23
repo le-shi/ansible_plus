@@ -1,0 +1,51 @@
+---
+- hosts: "{{ host_app }}"
+  vars:
+    webapps_portal: "portal_nb.tar.gz"
+    webapps_sso: "sso_nb.tar.gz"
+    webapps_bid: "bid_nb.tar.gz"
+    webapps_uc: "uc_nb.tar.gz"
+    app_user: qyy
+  tasks:
+  - name: 'deploy | {{ app_id }}'
+    unarchive:
+      src: "../files/{{ webapps_portal }}"
+      dest: "/home/webapps/apps-{{app_id}}/"
+      creates: "{{ app_id }}"
+      owner: "{{ app_user }}"
+      group: "{{ app_user }}"
+      copy: yes
+      mode: "0755"
+    tags: portal
+  - name: 'deploy | {{ app_id }}'
+    unarchive:
+      src: "../files/{{ webapps_sso }}"
+      dest: "/home/webapps/apps-{{app_id}}/"
+      creates: "{{ app_id }}"
+      owner: "{{ app_user }}"
+      group: "{{ app_user }}"
+      copy: yes
+      mode: "0755"
+    tags: sso
+  - name: 'deploy | {{ app_id }}'
+    unarchive:
+      src: "../files/{{ webapps_bid }}"
+      dest: "/home/webapps/apps-{{app_id}}/"
+      creates: "{{ app_id }}"
+      owner: "{{ app_user }}"
+      group: "{{ app_user }}"
+      copy: yes
+      mode: "0755"
+    tags: bid
+  - name: 'deploy | {{ app_id }}'
+    unarchive:
+      src: "../files/{{ webapps_uc }}"
+      dest: "/home/webapps/apps-{{app_id}}/"
+      creates: "{{ app_id }}"
+      owner: "{{ app_user }}"
+      group: "{{ app_user }}"
+      copy: yes
+      mode: "0755"
+    tags: uc
+ 
+      

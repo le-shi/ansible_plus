@@ -1,0 +1,6 @@
+#!/bin/bash
+if [ `ps -ef|grep nginx | grep -v grep | wc -l` -lt 2 ]
+then
+  /etc/init.d/keepalived stop
+  exit
+fi

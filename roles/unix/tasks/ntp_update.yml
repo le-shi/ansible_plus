@@ -1,0 +1,33 @@
+---
+- hosts: all:!192.168.9.196
+  gather_facts: Ture
+  vars:
+    - ntp_server: 192.168.9.196
+  tasks:
+# server
+    - name: install ntp ntpdate
+      yum:
+          name={{ item }}
+          state=latest
+      with_items:
+        - ntpdate
+        - ntp
+    - name: deploy ntp-server.conf
+      template:
+            src=../templates/ntp.conf.j2
+            dest=/etc/ntp.conf
+            backup=yes
+            mode=0644
+    - name: SYNC_HWCLOCK=yes
+      shell:
+            echo "SYNC_HWCLOCK=yes" >> /etc/sysconfig/ntpd
+    - name: chkconfig on
+      shell:
+            chkconfig --levels 235 ntpd on
+    - name: restart ntpd
+      shell: service ntpd restart
+# client
+    - name: deploy ntp-client
+      cron: name=ntp_client job=ntpdate {{ntp_server}}
+      tags: 
+        - client

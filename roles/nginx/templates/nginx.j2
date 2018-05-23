@@ -1,0 +1,172 @@
+
+#user  nobody;
+worker_processes  auto;
+
+#error_log  logs/error.log;
+#error_log  logs/error.log  notice;
+error_log  {{log_path}}/error.log  info;
+
+pid        /var/run/nginx.pid;
+
+
+events {
+    worker_connections  10240;
+    multi_accept on;
+    use epoll;
+}
+
+
+http {
+    include       mime.types;
+    default_type  application/octet-stream;
+
+    #log_format  main  '$remote_addr - $remote_user [$time_local] "$request" '
+    #                  '$status $body_bytes_sent "$http_referer" '
+    #                  '"$http_user_agent" "$http_x_forwarded_for"';
+
+    log_format  main  '$remote_addr - $remote_user [$time_local] "$request" '
+                      '$status $body_bytes_sent "$http_referer" '
+                      '"$http_user_agent" "$http_x_forwarded_for" '
+                        '$request_time $upstream_response_time';
+
+    access_log  {{log_path}}/access.log  main;
+    tcp_nodelay on;
+
+    server_tokens off;
+
+    sendfile        on;
+
+    keepalive_timeout  65;
+
+
+    gzip  on;
+    gzip_min_length  1k;
+    gzip_buffers     4 8k;
+    gzip_http_version 1.1;
+    gzip_comp_level 5;
+    gzip_types text/plain text/css application/json application/x-javascript text/xml application/xml application/xml+rss text/javascript;
+	
+upstream portal_app {
+#ip_hash;
+server PORTAL:8080;
+}
+
+upstream uc_app {
+server UC:8083;
+}
+
+upstream utr_app {
+server UTR:8081;
+}
+
+upstream sso_app {
+#sticky;
+server SSO:8084;
+}
+
+upstream flow_app {
+server FLOW:8085;
+}
+
+upstream bid_app {
+server BID:8082;
+}
+
+upstream cms_app {
+server CMS:8088;
+}
+
+upstream utrj_app {
+server UTRJ:8086;
+}
+
+upstream gzq_app {
+server GZQ:8087;
+}
+
+server { 
+	listen 80; 
+	server_name {{serverName}};
+	location  / {
+		root /home/webapps/apps-portal/portal;
+		index index.shtml;
+	}
+
+        location = /pro {
+            index index.shtml;
+            root /home/webapps/apps-portal/portal;
+        }
+    
+        location = /qyy/gzs/ {
+            index index.shtml;
+            root /home/webapps/apps-portal/portal;
+        }
+    
+        location = /article/ {
+            index index.shtml;
+            root /home/webapps/apps-portal/portal;
+        }
+
+	location ~ .*\.(shtml|html|png|jpg|jpeg|gif|ico|js|css|json)$ {
+		ssi on;
+		ssi_silent_errors on;
+		ssi_types text/shtml;
+		root /home/webapps/apps-portal/portal;
+		#expires  3d;
+	}
+	
+	location ^~ /portal {
+		proxy_set_header Host $host; 
+		proxy_set_header X-Real-IP $remote_addr; 
+		proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for; 
+		proxy_pass http://portal_app/portal;
+		#expires  3d; 
+	}
+	
+
+	location ^~ /sso  {
+		proxy_set_header Host $host;		
+		proxy_pass http://sso_app/sso; 
+		#expires  3d; 
+	}
+	
+	location ^~ /utr  {
+		proxy_set_header Host $host;	
+		
+		proxy_pass http://utr_app/utr; 
+		#expires  3d; 
+	}
+	
+	location ^~ /uc  {
+		proxy_set_header Host $host; 
+		proxy_pass http://uc_app/uc; 
+	}
+	
+	location ^~ /bid  {
+		proxy_set_header Host $host; 
+		proxy_pass http://bid_app/bid; 
+	}
+	
+	location ^~ /cms  {
+		proxy_set_header Host $host; 
+		proxy_pass http://cms_app/cms; 
+	}
+	
+	location ^~ /utrj  {
+		proxy_set_header Host $host; 
+		proxy_pass http://utrj_app/utrj; 
+	}
+	
+	location ^~ /gzq  {
+		proxy_set_header Host $host; 
+		proxy_pass http://gzq_app/gzq; 
+	}
+	
+	location ^~ /flow  {
+		proxy_set_header Host $host; 
+		proxy_pass http://flow_app/flow; 
+	}
+	
+     }
+
+}

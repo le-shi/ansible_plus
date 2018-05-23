@@ -1,0 +1,20 @@
+- hosts: all
+  vars:
+    #sid1: "qyy_bid"
+    #sid2: "utrbid_db"
+    sid1: "UTRM_DB_NX"
+    sid2: "qyy"
+  tasks:
+  - name: oracle_SID update
+    shell: sed -i "s/{{ sid2 }}/{{ sid1 }}/g" {{ item }}
+    with_items:
+      - /home/webapps/apps-flow/flow/WEB-INF/classes/application.properties
+#      - /home/webapps/apps-gzq/gzq/WEB-INF/classes/config/jdbc.properties  
+      - /home/webapps/apps-sso/sso/WEB-INF/classes/config/jdbc.properties  
+      - /home/webapps/apps-uc/uc/WEB-INF/classes/config/jdbc.properties    
+      - /home/webapps/apps-utr/utr/WEB-INF/classes/config/jdbc.properties  
+      - /home/webapps/apps-utrj/utrj/WEB-INF/classes/config/jdbc.properties 
+      - /home/webapps/apps-bid/bid/WEB-INF/classes/config/jdbc.properties 
+#      - /home/webapps/apps-eid/eid/WEB-INF/classes/config/jdbc.properties  
+      - /home/webapps/apps-cms/cms/WEB-INF/classes/config/jdbc.properties
+

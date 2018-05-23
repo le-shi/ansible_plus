@@ -1,0 +1,7 @@
+---
+- hosts: sso
+  vars:
+  - app_id: "sso"
+  tasks:
+  - name: deploy {{ app_id }}
+    include: tomcat.yml

@@ -1,0 +1,22 @@
+#!/bin/bash
+SERVERS="192.168.9.207 192.168.9.208"
+PASSWD="123qwe!@#QWE"
+
+function sshcopyid
+{
+    expect -c "
+        set timeout -1;
+        spawn ssh-copy-id $1;
+        expect {
+            \"yes/no\" { send \"yes\r\" ;exp_contine; }
+            \"password:\" { send \"$PASSWD\r\";exp_continue; }
+        };
+        expect eof;
+    "
+}
+
+for server in $SERVERS
+do
+    sshcopyid $server
+done
+
