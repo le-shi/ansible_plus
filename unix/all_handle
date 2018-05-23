@@ -32,4 +32,5 @@ app接管(tomcat):export id=portal && ansible-playbook supervisorctl.yml -i /etc
 app接管(nginx):ansible-playbook supervisorctl.yml -i /etc/ansible/webservers.yml --extra-vars "host_app=nginx" --tags="nginx"
 ---
 webapps_deploy
-ansible-playbook deploy.yml -i /etc/ansible/webservers.yml --extra-vars "host_app=portal" --tags "portal"
+ansible-playbook webapps.yml --extra-vars "host_app=portal app_id=portal" --tags=portal
+export app=portal && ansible-playbook webapps.yml --extra-vars "host_app=$app app_id=$app" --tags=$app
