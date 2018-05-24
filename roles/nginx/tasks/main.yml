@@ -45,8 +45,8 @@
         path: "/home/{{item}}"
         state: directory
         mode: "u=rwx,g=rx,o=rx"
-        owner: "{{ user_id }}"
-        group: "{{ user_id }}"
+        owner: "{{ user_id | default('root') }}"
+        group: "{{ user_id | default('root') }}"
       with_items:
         - webapps
   handlers:
@@ -57,4 +57,3 @@
         enabled: yes
     - name: makecache
       shell: yum clean all && yum makecache
-
