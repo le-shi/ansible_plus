@@ -16,6 +16,7 @@
       group: "{{ app_user }}"
       copy: yes
       mode: "0755"
+    notify: add rc local
     tags: portal
   - name: 'deploy | {{ app_id }}'
     unarchive:
@@ -26,6 +27,7 @@
       group: "{{ app_user }}"
       copy: yes
       mode: "0755"
+    notify: add rc local
     tags: sso
   - name: 'deploy | {{ app_id }}'
     unarchive:
@@ -36,6 +38,7 @@
       group: "{{ app_user }}"
       copy: yes
       mode: "0755"
+    notify: add rc local
     tags: bid
   - name: 'deploy | {{ app_id }}'
     unarchive:
@@ -46,6 +49,10 @@
       group: "{{ app_user }}"
       copy: yes
       mode: "0755"
+    notify: add rc local
     tags: uc
- 
-      
+  hadndlers:
+    - name: add rc local
+      lineinfile:
+        path: /etc/rc.local
+        line: "/home/tomcat/{{ app_id }}/bin/startup.sh"
