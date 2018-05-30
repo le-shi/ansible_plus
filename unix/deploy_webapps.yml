@@ -55,4 +55,4 @@
     - name: add rc local
       lineinfile:
         path: /etc/rc.local
-        line: "/home/tomcat/{{ app_id }}/bin/startup.sh"
+        line: "su - {{ app_user }} -c /home/tomcat/{{ app_id }}/bin/startup.sh"
