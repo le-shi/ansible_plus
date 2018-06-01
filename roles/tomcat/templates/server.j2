@@ -19,10 +19,10 @@
 
     <Executor name="tomcatThreadPool" namePrefix="catalina-exec-" maxThreads="1000" minSpareThreads="200" maxIdleTime="60000"/>
     <Connector port="{{ tomcat_port }}" maxThreads="1000" acceptCount="800"
-               connectionTimeout="20000" executor="tomcatThreadPool" 
+               connectionTimeout="20000" executor="tomcatThreadPool"
                redirectPort="8443"
-		compression="on"
-	       protocol="org.apache.coyote.http11.Http11NioProtocol" URIEncoding="UTF-8"/>        
+		compression="off"
+	       protocol="org.apache.coyote.http11.Http11NioProtocol" URIEncoding="UTF-8"/>
     <Engine name="Catalina" defaultHost="localhost">
         <Realm className="org.apache.catalina.realm.UserDatabaseRealm" resourceName="UserDatabase"/>
         <Host name="localhost"  appBase="/home/webapps/apps-{{ app_id }}"
