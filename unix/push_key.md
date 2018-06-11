@@ -8,7 +8,7 @@ function sshcopyid
         set timeout -1;
         spawn ssh-copy-id $1;
         expect {
-            \"yes/no\" { send \"yes\r\" ;exp_contine; }
+            \"yes/no\" { send \"yes\r\" ;exp_continue; }
             \"password:\" { send \"$PASSWD\r\";exp_continue; }
         };
         expect eof;
