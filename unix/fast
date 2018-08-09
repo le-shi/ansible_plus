@@ -103,7 +103,7 @@ roles:
     - name: install ntp ntpdate
       yum:
           name={{ item }}
-          state=latest
+          state=installed
       with_items:
         - ntpdate
         - ntp
@@ -153,7 +153,7 @@ tasks:
 - name: install nginx
   yum:
         name=nginx
-        state=present
+        state=installed
 - name: deploy configure
   template:
         src=nginx.j2
@@ -253,7 +253,7 @@ vars:
 tasks:
 yum:
  name=supervisor
- state=persent
+ state=installed
 template:
  src=supervisro.j2
  dest=/etc/supervisor.conf

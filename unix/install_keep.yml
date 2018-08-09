@@ -14,7 +14,7 @@
     - name: install keepalived
       yum:
         name: "{{item}}"
-        state: present
+        state: installed
         update_cache: yes
       with_items:
         - keepalived

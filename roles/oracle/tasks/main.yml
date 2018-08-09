@@ -32,7 +32,7 @@
     - name: check | yum packages
       yum:
         name: "{{ item }}"
-        state: latest
+        state: installed
         update_cache: yes
       with_items:
         - binutils.x86_64

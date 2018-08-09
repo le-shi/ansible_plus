@@ -41,7 +41,7 @@
     - name: check | yum packages
       yum:
         name: "{{ item }}"
-        state: latest
+        state: installed
         update_cache: yes
       ignore_errors: True
       with_items:

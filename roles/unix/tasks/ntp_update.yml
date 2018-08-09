@@ -7,18 +7,18 @@
 # server
     - name: install ntp ntpdate
       yum:
-          name={{ item }}
-          state=latest
+          name: "{{ item }}"
+          state: installed
       with_items:
         - ntpdate
         - ntp
     - name: deploy ntp-server.conf
       template:
-            src=../templates/ntp.conf.j2
-            dest=/etc/ntp.conf
-            backup=yes
-            mode=0644
-    - name: SYNC_HWCLOCK=yes
+            src: ../templates/ntp.conf.j2
+            dest: /etc/ntp.conf
+            backup: yes
+            mode: 0644
+    - name: SYNC_HWCLOCK: yes
       shell:
             echo "SYNC_HWCLOCK=yes" >> /etc/sysconfig/ntpd
     - name: chkconfig on
