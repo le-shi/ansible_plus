@@ -85,6 +85,7 @@
        name: vm.overcommit_memory
        value: 1
        state: present
+      ignore_errors: True
 
     - name: configure | TCP backlog setting of 512.
       shell: echo 512 > /proc/sys/net/core/somaxconn
