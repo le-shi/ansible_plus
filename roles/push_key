@@ -15,8 +15,16 @@ function sshcopyid
     "
 }
 
-for server in $SERVERS
-do
-    sshcopyid $server
-done
+function p_while {
+   grep -Ev "#|^$" $file | while read server
+   do
+     sshcopyid $server
+   done
+}
 
+function p_for {
+  for server in $SERVERS
+  do
+      sshcopyid $server
+  done
+}
