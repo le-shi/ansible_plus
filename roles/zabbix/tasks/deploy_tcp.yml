@@ -1,0 +1,32 @@
+---
+- hosts: "{{ host_app }}"
+  tasks:
+    - name: Initial | create directory /etc/zabbix/scripts
+      file: 
+        path: /etc/zabbix/scripts
+        state: directory
+        mode: "u=rwx,g=rx,o=rx"
+    - name: Initial | check zabbix_agentd.conf(Include)
+      lineinfile:
+        path: /etc/zabbix/zabbix_agentd.conf
+        state: present
+        line: "Include=/etc/zabbix/zabbix_agentd.d/"
+    - name: Install | deploy tcp_conn_status.{conf,sh}
+      template:
+        src: "../templates/{{ item.j2_file }}"
+        dest: "{{ item.deploy_file }}"
+        mode: "u=rwx,g=rx,o=rx"
+        owner: zabbix
+        group: zabbix
+        backup: yes
+      notify: restart zabbix_agentd
+      with_items:
+        - { "j2_file": "tcp-status-params.j2", "deploy_file": "/etc/zabbix/zabbix_agentd.d/tcp-status-params.conf"}
+        - { j2_file: "tcp_conn_status.j2", deploy_file: "/etc/zabbix/scripts/tcp_conn_status.sh"}
+  handlers:
+    - name: restart zabbix_agentd
+      service:
+        name: zabbix-agent
+        state: restarted
+        enabled: yes
+#ansible-playbook deploy_tcp.yml --extra-vars host_app=10.1.1.10
