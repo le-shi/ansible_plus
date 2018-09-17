@@ -21,8 +21,8 @@
         backup: yes
       notify: restart zabbix_agentd
       with_items:
-        - { "j2_file": "tcp-status-params.j2", "deploy_file": "/etc/zabbix/zabbix_agentd.d/tcp-status-params.conf"}
-        - { j2_file: "tcp_conn_status.j2", deploy_file: "/etc/zabbix/scripts/tcp_conn_status.sh"}
+        - { "j2_file": "tcp-status-params-conf.j2", "deploy_file": "/etc/zabbix/zabbix_agentd.d/tcp-status-params.conf"}
+        - { j2_file: "tcp_conn_status_sh.j2", deploy_file: "/etc/zabbix/scripts/tcp_conn_status.sh"}
   handlers:
     - name: restart zabbix_agentd
       service:
