@@ -29,4 +29,5 @@
         name: zabbix-agent
         state: restarted
         enabled: yes
-#ansible-playbook deploy_tcp.yml --extra-vars host_app=10.1.1.10
+# #ansible-playbook deploy_tcp.yml --extra-vars host_app=10.1.1.10
+# $ansible-playbook deploy_tcp.yml --extra-vars host_app=10.1.1.10 -s
